@@ -244,61 +244,64 @@ window.toggleQR = () => {
 </script>
 
 <script>
+// Pytania: correct = tekst poprawnej odpowiedzi, wrong = dwie błędne
 const allQuestions = [
-  { q: "Co to jest zdrowie?", a: ["Brak choroby", "Dobra kondycja fizyczna", "Stan pełnego dobrostanu fizycznego, psychicznego i społecznego"], correct: 2 },
-  { q: "Co wpływa na zdrowie najbardziej?", a: ["Styl życia", "Pogoda", "Szkoła"], correct: 0 },
-  { q: "Ile godzin snu potrzebuje nastolatek?", a: ["4–5", "12", "7–9"], correct: 2 },
-  { q: "Co to jest profilaktyka?", a: ["Ignorowanie objawów", "Zapobieganie chorobom", "Leczenie chorób"], correct: 1 },
-  { q: "Który czynnik NIE wpływa na zdrowie?", a: ["Kolor oczu", "Dieta", "Aktywność fizyczna"], correct: 0 },
-  { q: "Ile posiłków dziennie zaleca się jeść?", a: ["10", "1", "3–5"], correct: 2 },
-  { q: "Co jest głównym źródłem energii?", a: ["Białko", "Węglowodany", "Woda"], correct: 1 },
-  { q: "Co zawiera najwięcej witamin?", a: ["Warzywa i owoce", "Fast food", "Słodycze"], correct: 0 },
-  { q: "Co należy ograniczać w diecie?", a: ["Warzywa", "Wodę", "Cukier"], correct: 2 },
-  { q: "Ile wody dziennie należy pić?", a: ["5 l", "ok. 1,5–2 l", "0,5 l"], correct: 1 },
-  { q: "Ile ruchu dziennie zaleca się?", a: ["3 godziny", "10 min", "60 min"], correct: 2 },
-  { q: "Co daje aktywność fizyczna?", a: ["Nic", "Poprawia kondycję", "Pogarsza zdrowie"], correct: 1 },
-  { q: "Który sport poprawia kondycję?", a: ["Leżenie", "Spanie", "Bieganie"], correct: 2 },
-  { q: "Co się dzieje bez ruchu?", a: ["Więcej energii", "Ryzyko chorób", "Lepsze zdrowie"], correct: 1 },
-  { q: "Rozgrzewka jest:", a: ["Szkodliwa", "Ważna", "Niepotrzebna"], correct: 1 },
-  { q: "Stres to:", a: ["Choroba", "Zawsze coś złego", "Naturalna reakcja organizmu"], correct: 2 },
-  { q: "Jak radzić sobie ze stresem?", a: ["Rozmawiać i odpoczywać", "Ignorować", "Nic nie robić"], correct: 0 },
-  { q: "Sen wpływa na:", a: ["Tylko wzrost", "Nic", "Zdrowie psychiczne i fizyczne"], correct: 2 },
-  { q: "Depresja to:", a: ["Lenistwo", "Choroba", "Humor"], correct: 1 },
-  { q: "Pomoc psychologiczna jest:", a: ["Zbędna", "Wstydliwa", "Normalna i ważna"], correct: 2 },
-  { q: "Nikotyna:", a: ["Dodaje energii", "Uzależnia", "Jest zdrowa"], correct: 1 },
-  { q: "Alkohol:", a: ["Poprawia koncentrację", "Nie szkodzi", "Szkodzi zdrowiu"], correct: 2 },
-  { q: "Uzależnienie to:", a: ["Choroba i przymus", "Zwyczaj", "Hobby"], correct: 0 },
-  { q: "Narkotyki:", a: ["Pomagają w nauce", "Są bezpieczne", "Są niebezpieczne"], correct: 2 },
-  { q: "E-papierosy:", a: ["Nie uzależniają", "Są zdrowe", "Też szkodzą"], correct: 2 },
-  { q: "Jak często myć ręce?", a: ["Nigdy", "Rzadko", "Często"], correct: 2 },
-  { q: "Ile razy dziennie myć zęby?", a: ["2 razy dziennie", "1 raz dziennie", "Nie trzeba"], correct: 0 },
-  { q: "Higiena zapobiega:", a: ["Wzrostowi", "Chorobom", "Nauce"], correct: 1 },
-  { q: "Brudne ręce mogą:", a: ["Przenosić bakterie", "Nic", "Leczyć"], correct: 0 },
-  { q: "Prysznic jest:", a: ["Szkodliwy", "Ważny dla zdrowia", "Niepotrzebny"], correct: 1 },
-  { q: "Pas bezpieczeństwa:", a: ["Przeszkadza", "Niepotrzebny", "Chroni życie"], correct: 2 },
-  { q: "Kask na rowerze:", a: ["Wstyd", "Niepotrzebny", "Chroni głowę"], correct: 2 },
-  { q: "Numer alarmowy w UE:", a: ["999", "911", "112"], correct: 2 },
-  { q: "Pierwsza pomoc jest:", a: ["Zakazana", "Bardzo ważna", "Niepotrzebna"], correct: 1 },
-  { q: "Oparzenia należy:", a: ["Smarować czymkolwiek", "Ignorować", "Schłodzić wodą"], correct: 2 },
-  { q: "Siedzący tryb życia jest:", a: ["Zdrowy", "Neutralny", "Szkodliwy"], correct: 2 },
-  { q: "Ekrany przed snem:", a: ["Bez wpływu", "Pogarszają sen", "Pomagają spać"], correct: 1 },
-  { q: "Regularność dnia:", a: ["Szkodzi", "Bez znaczenia", "Pomaga zdrowiu"], correct: 2 },
-  { q: "Relacje z ludźmi są:", a: ["Ważne dla zdrowia", "Szkodliwe", "Nieważne"], correct: 0 },
-  { q: "Odpoczynek jest:", a: ["Zbędny", "Stratą czasu", "Potrzebny"], correct: 2 },
-  { q: "Szczepienia:", a: ["Są zbędne", "Chronią zdrowie", "Szkodzą"], correct: 1 },
-  { q: "Badania kontrolne:", a: ["Wykrywają choroby", "Niepotrzebne", "Szkodzą"], correct: 0 },
-  { q: "Nadwaga może:", a: ["Pomagać", "Szkodzić zdrowiu", "Nic"], correct: 1 },
-  { q: "Słońce bez ochrony jest:", a: ["Leczy wszystko", "Bezpieczne", "Szkodliwe"], correct: 2 },
-  { q: "SPF to:", a: ["Lek", "Rodzaj jedzenia", "Ochrona przed słońcem"], correct: 2 },
-  { q: "Witaminy są:", a: ["Szkodliwe", "Potrzebne", "Nieważne"], correct: 1 },
-  { q: "Sen poniżej 5h jest:", a: ["Zalecany", "Zdrowy", "Szkodliwy"], correct: 2 },
-  { q: "Picie napojów energetycznych:", a: ["Bez wpływu", "Niezdrowe w nadmiarze", "Zdrowe"], correct: 1 },
-  { q: "Zdrowie psychiczne i fizyczne:", a: ["Nie istnieją", "Nie są powiązane", "Są powiązane"], correct: 2 },
-  { q: "Najlepszy sposób dbania o zdrowie:", a: ["Same leki", "Zdrowy styl życia", "Brak ruchu"], correct: 1 }
+  { q: "Co to jest zdrowie?", correct: "Stan pełnego dobrostanu fizycznego, psychicznego i społecznego", wrong: ["Brak choroby", "Dobra kondycja fizyczna"] },
+  { q: "Co wpływa na zdrowie najbardziej?", correct: "Styl życia", wrong: ["Pogoda", "Szkoła"] },
+  { q: "Ile godzin snu potrzebuje nastolatek?", correct: "7–9", wrong: ["4–5", "12"] },
+  { q: "Co to jest profilaktyka?", correct: "Zapobieganie chorobom", wrong: ["Leczenie chorób", "Ignorowanie objawów"] },
+  { q: "Który czynnik NIE wpływa na zdrowie?", correct: "Kolor oczu", wrong: ["Dieta", "Aktywność fizyczna"] },
+  { q: "Ile posiłków dziennie zaleca się jeść?", correct: "3–5", wrong: ["1", "10"] },
+  { q: "Co jest głównym źródłem energii?", correct: "Węglowodany", wrong: ["Białko", "Woda"] },
+  { q: "Co zawiera najwięcej witamin?", correct: "Warzywa i owoce", wrong: ["Fast food", "Słodycze"] },
+  { q: "Co należy ograniczać w diecie?", correct: "Cukier", wrong: ["Warzywa", "Wodę"] },
+  { q: "Ile wody dziennie należy pić?", correct: "ok. 1,5–2 l", wrong: ["0,5 l", "5 l"] },
+  { q: "Ile ruchu dziennie zaleca się?", correct: "60 min", wrong: ["10 min", "3 godziny"] },
+  { q: "Co daje aktywność fizyczna?", correct: "Poprawia kondycję", wrong: ["Pogarsza zdrowie", "Nic"] },
+  { q: "Który sport poprawia kondycję?", correct: "Bieganie", wrong: ["Leżenie", "Spanie"] },
+  { q: "Co się dzieje bez ruchu?", correct: "Ryzyko chorób", wrong: ["Lepsze zdrowie", "Więcej energii"] },
+  { q: "Rozgrzewka jest:", correct: "Ważna", wrong: ["Niepotrzebna", "Szkodliwa"] },
+  { q: "Stres to:", correct: "Naturalna reakcja organizmu", wrong: ["Zawsze coś złego", "Choroba"] },
+  { q: "Jak radzić sobie ze stresem?", correct: "Rozmawiać i odpoczywać", wrong: ["Ignorować", "Nic nie robić"] },
+  { q: "Sen wpływa na:", correct: "Zdrowie psychiczne i fizyczne", wrong: ["Tylko wzrost", "Nic"] },
+  { q: "Depresja to:", correct: "Choroba", wrong: ["Humor", "Lenistwo"] },
+  { q: "Pomoc psychologiczna jest:", correct: "Normalna i ważna", wrong: ["Wstydliwa", "Zbędna"] },
+  { q: "Nikotyna:", correct: "Uzależnia", wrong: ["Jest zdrowa", "Dodaje energii"] },
+  { q: "Alkohol:", correct: "Szkodzi zdrowiu", wrong: ["Nie szkodzi", "Poprawia koncentrację"] },
+  { q: "Uzależnienie to:", correct: "Choroba i przymus", wrong: ["Zwyczaj", "Hobby"] },
+  { q: "Narkotyki:", correct: "Są niebezpieczne", wrong: ["Są bezpieczne", "Pomagają w nauce"] },
+  { q: "E-papierosy:", correct: "Też szkodzą", wrong: ["Są zdrowe", "Nie uzależniają"] },
+  { q: "Jak często myć ręce?", correct: "Często", wrong: ["Rzadko", "Nigdy"] },
+  { q: "Ile razy dziennie myć zęby?", correct: "2 razy dziennie", wrong: ["1 raz dziennie", "Nie trzeba"] },
+  { q: "Higiena zapobiega:", correct: "Chorobom", wrong: ["Wzrostowi", "Nauce"] },
+  { q: "Brudne ręce mogą:", correct: "Przenosić bakterie", wrong: ["Nic", "Leczyć"] },
+  { q: "Prysznic jest:", correct: "Ważny dla zdrowia", wrong: ["Niepotrzebny", "Szkodliwy"] },
+  { q: "Pas bezpieczeństwa:", correct: "Chroni życie", wrong: ["Niepotrzebny", "Przeszkadza"] },
+  { q: "Kask na rowerze:", correct: "Chroni głowę", wrong: ["Wstyd", "Niepotrzebny"] },
+  { q: "Numer alarmowy w UE:", correct: "112", wrong: ["911", "999"] },
+  { q: "Pierwsza pomoc jest:", correct: "Bardzo ważna", wrong: ["Niepotrzebna", "Zakazana"] },
+  { q: "Oparzenia należy:", correct: "Schłodzić wodą", wrong: ["Ignorować", "Smarować czymkolwiek"] },
+  { q: "Siedzący tryb życia jest:", correct: "Szkodliwy", wrong: ["Zdrowy", "Neutralny"] },
+  { q: "Ekrany przed snem:", correct: "Pogarszają sen", wrong: ["Pomagają spać", "Bez wpływu"] },
+  { q: "Regularność dnia:", correct: "Pomaga zdrowiu", wrong: ["Szkodzi", "Bez znaczenia"] },
+  { q: "Relacje z ludźmi są:", correct: "Ważne dla zdrowia", wrong: ["Nieważne", "Szkodliwe"] },
+  { q: "Odpoczynek jest:", correct: "Potrzebny", wrong: ["Stratą czasu", "Zbędny"] },
+  { q: "Szczepienia:", correct: "Chronią zdrowie", wrong: ["Szkodzą", "Są zbędne"] },
+  { q: "Badania kontrolne:", correct: "Wykrywają choroby", wrong: ["Niepotrzebne", "Szkodzą"] },
+  { q: "Nadwaga może:", correct: "Szkodzić zdrowiu", wrong: ["Pomagać", "Nic"] },
+  { q: "Słońce bez ochrony jest:", correct: "Szkodliwe", wrong: ["Bezpieczne", "Leczy wszystko"] },
+  { q: "SPF to:", correct: "Ochrona przed słońcem", wrong: ["Rodzaj jedzenia", "Lek"] },
+  { q: "Witaminy są:", correct: "Potrzebne", wrong: ["Nieważne", "Szkodliwe"] },
+  { q: "Sen poniżej 5h jest:", correct: "Szkodliwy", wrong: ["Zdrowy", "Zalecany"] },
+  { q: "Picie napojów energetycznych:", correct: "Niezdrowe w nadmiarze", wrong: ["Zdrowe", "Bez wpływu"] },
+  { q: "Zdrowie psychiczne i fizyczne:", correct: "Są powiązane", wrong: ["Nie są powiązane", "Nie istnieją"] },
+  { q: "Najlepszy sposób dbania o zdrowie:", correct: "Zdrowy styl życia", wrong: ["Brak ruchu", "Same leki"] }
 ];
 
 const TOTAL_QUESTIONS = 10;
 let questions = [], current = 0, score = 0, playerNick = "";
+// przechowuje potasowane odpowiedzi dla bieżącego pytania
+let currentAnswers = [];
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
@@ -317,23 +320,27 @@ function showQuestion() {
   document.getElementById("progressBar").style.width = ((current / TOTAL_QUESTIONS) * 100) + "%";
   document.getElementById("question").innerText = q.q;
   document.getElementById("result").innerText = "";
+
+  // Tasuj odpowiedzi – poprawna trafia na losową pozycję
+  currentAnswers = shuffle([q.correct, ...q.wrong]);
+
   const labels = ["A", "B", "C"];
-  document.getElementById("answers").innerHTML = q.a.map((ans, i) =>
+  document.getElementById("answers").innerHTML = currentAnswers.map((ans, i) =>
     `<button class="btn-answer" onclick="checkAnswer(${i})"><b>${labels[i]}.</b> ${ans}</button>`
   ).join("");
 }
 
 window.checkAnswer = (i) => {
   document.querySelectorAll(".btn-answer").forEach(b => b.disabled = true);
-  const correct = questions[current].correct;
+  const correctIndex = currentAnswers.indexOf(questions[current].correct);
   const btns = document.querySelectorAll(".btn-answer");
-  if (i === correct) {
+  if (i === correctIndex) {
     score++;
     btns[i].style.background = "#a5d6a7";
     document.getElementById("result").innerText = "✅ Dobrze!";
   } else {
     btns[i].style.background = "#ef9a9a";
-    btns[correct].style.background = "#a5d6a7";
+    btns[correctIndex].style.background = "#a5d6a7";
     document.getElementById("result").innerText = "❌ Błąd!";
   }
   setTimeout(() => { current++; current < questions.length ? showQuestion() : endGame(); }, 900);
