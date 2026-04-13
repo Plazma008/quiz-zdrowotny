@@ -107,11 +107,12 @@
     font-size: 0.9rem;
     color: #555;
     line-height: 1.8;
-    max-height: 300px;
+    max-height: 320px;
     overflow-y: auto;
   }
   .hidden { display: none; }
-  .score-big { font-size: 3rem; font-weight: bold; color: #00796b; margin: 10px 0; }
+  .score-big { font-size: 2.6rem; font-weight: bold; color: #00796b; margin: 10px 0 4px; }
+  .score-pct { font-size: 1.2rem; color: #888; margin-bottom: 6px; }
   .qr-box {
     background: #f1f8e9;
     border-radius: 12px;
@@ -181,13 +182,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
-const ADMIN_PASSWORD = "admin";
+const ADMIN_PASSWORD = "Zdrowie2025!";
 
-window._db = db;
-
-window.saveToFirebase = async (score, nick) => {
+window.saveToFirebase = async (score, total, nick) => {
   await addDoc(collection(db, "wyniki"), {
     wynik: score,
+    total: total,
+    pct: Math.round((score / total) * 100),
     nick: nick || "Anonim",
     data: new Date().toLocaleString("pl-PL"),
     ts: Date.now()
@@ -208,11 +209,11 @@ window.showAdmin = async () => {
     if (!results.length) {
       document.getElementById("adminData").innerHTML = "<i>Brak wyników</i>"; return;
     }
-    const avg  = (results.reduce((a,b) => a + b.wynik, 0) / results.length).toFixed(2);
-    const best = Math.max(...results.map(r => r.wynik));
-    let html = `<span class="stat">👥 ${results.length} graczy &nbsp;|&nbsp; ⭐ Średnia: ${avg}/7 &nbsp;|&nbsp; 🏆 Max: ${best}/7</span><hr class="divider">`;
+    const avgPct = Math.round(results.reduce((a,b) => a + b.pct, 0) / results.length);
+    const bestPct = Math.max(...results.map(r => r.pct));
+    let html = `<span class="stat">👥 ${results.length} graczy &nbsp;|&nbsp; ⭐ Śr: ${avgPct}% &nbsp;|&nbsp; 🏆 Max: ${bestPct}%</span><hr class="divider">`;
     results.forEach((r, i) => {
-      html += `<b>#${i+1} ${r.nick}</b> – ${r.wynik}/7 <small style="color:#bbb">(${r.data})</small><br>`;
+      html += `<b>#${i+1} ${r.nick}</b> – ${r.wynik}/${r.total} <span style="color:#00796b;font-weight:bold">(${r.pct}%)</span> <small style="color:#bbb">${r.data}</small><br>`;
     });
     document.getElementById("adminData").innerHTML = html;
   } catch(e) {
@@ -241,28 +242,59 @@ window.toggleQR = () => {
 
 <script>
 const allQuestions = [
-  { q: "Ile godzin snu potrzebuje nastolatek?",   a: ["4-5", "7-9", "12"],                              correct: 1 },
-  { q: "Który napój jest najzdrowszy?",            a: ["Sok gazowany", "Woda", "Energetyk"],              correct: 1 },
-  { q: "Ile kroków dziennie jest zalecane?",       a: ["1000", "10 000", "500"],                          correct: 1 },
-  { q: "Co pomaga redukować stres?",               a: ["Ruch", "Brak snu", "Fast food"],                  correct: 0 },
-  { q: "Najlepsze śniadanie to:",                  a: ["Brak", "Zbilansowane", "Same słodycze"],          correct: 1 },
-  { q: "Ile razy dziennie warto jeść?",            a: ["1", "4-5", "10"],                                 correct: 1 },
-  { q: "Najlepsza forma aktywności to:",           a: ["Brak ruchu", "Regularna aktywność", "Tylko gry"], correct: 1 },
-  { q: "Co szkodzi zdrowiu?",                      a: ["Sen", "Ruch", "Brak snu"],                        correct: 2 },
-  { q: "Warzywa są:",                              a: ["Niezdrowe", "Zdrowe", "Obojętne"],                correct: 1 },
-  { q: "Jak często powinno się ćwiczyć?",          a: ["Codziennie lub regularnie", "Nigdy", "Raz w roku"], correct: 0 },
-  { q: "Co jest źródłem witamin?",                 a: ["Warzywa i owoce", "Fast food", "Słodycze"],      correct: 0 },
-  { q: "Ile wody dziennie?",                       a: ["2 litry", "0,5 litra", "5 litrów"],               correct: 0 },
-  { q: "Najlepszy odpoczynek to:",                 a: ["Sen", "Telefon", "Brak przerwy"],                 correct: 0 },
-  { q: "Co poprawia kondycję?",                    a: ["Ruch", "Leżenie", "Brak snu"],                    correct: 0 },
-  { q: "Zdrowa przekąska to:",                     a: ["Owoc", "Chipsy", "Batony"],                       correct: 0 },
-  { q: "Co robić przed snem?",                     a: ["Relaks", "Telefon", "Energetyk"],                 correct: 0 },
-  { q: "Najlepsza pora na ruch:",                  a: ["Dowolna", "Nigdy", "Raz w miesiącu"],             correct: 0 },
-  { q: "Co wzmacnia zdrowie psychiczne?",          a: ["Rozmowa", "Izolacja", "Brak snu"],                correct: 0 },
-  { q: "Czy śniadanie jest ważne?",                a: ["Tak", "Nie", "Nie wiem"],                         correct: 0 },
-  { q: "Co daje energię?",                         a: ["Zdrowa dieta", "Fast food", "Brak jedzenia"],     correct: 0 }
+  { q: "Co to jest zdrowie?", a: ["Brak choroby", "Stan pełnego dobrostanu fizycznego, psychicznego i społecznego", "Dobra kondycja fizyczna"], correct: 1 },
+  { q: "Co wpływa na zdrowie najbardziej?", a: ["Styl życia", "Pogoda", "Szkoła"], correct: 0 },
+  { q: "Ile godzin snu potrzebuje nastolatek?", a: ["4–5", "7–9", "12"], correct: 1 },
+  { q: "Co to jest profilaktyka?", a: ["Leczenie chorób", "Zapobieganie chorobom", "Ignorowanie objawów"], correct: 1 },
+  { q: "Który czynnik NIE wpływa na zdrowie?", a: ["Dieta", "Aktywność fizyczna", "Kolor oczu"], correct: 2 },
+  { q: "Ile posiłków dziennie zaleca się jeść?", a: ["1", "3–5", "10"], correct: 1 },
+  { q: "Co jest głównym źródłem energii?", a: ["Białko", "Węglowodany", "Woda"], correct: 1 },
+  { q: "Co zawiera najwięcej witamin?", a: ["Fast food", "Warzywa i owoce", "Słodycze"], correct: 1 },
+  { q: "Co należy ograniczać?", a: ["Warzywa", "Cukier", "Wodę"], correct: 1 },
+  { q: "Ile wody dziennie należy pić?", a: ["0,5 l", "ok. 1,5–2 l", "5 l"], correct: 1 },
+  { q: "Ile ruchu dziennie zaleca się?", a: ["10 min", "60 min", "3 godziny"], correct: 1 },
+  { q: "Co daje aktywność fizyczna?", a: ["Pogarsza zdrowie", "Poprawia kondycję", "Nic"], correct: 1 },
+  { q: "Który sport poprawia kondycję?", a: ["Bieganie", "Leżenie", "Spanie"], correct: 0 },
+  { q: "Co się dzieje bez ruchu?", a: ["Lepsze zdrowie", "Ryzyko chorób", "Więcej energii"], correct: 1 },
+  { q: "Rozgrzewka jest:", a: ["Niepotrzebna", "Ważna", "Szkodliwa"], correct: 1 },
+  { q: "Stres to:", a: ["Zawsze coś złego", "Naturalna reakcja organizmu", "Choroba"], correct: 1 },
+  { q: "Jak radzić sobie ze stresem?", a: ["Ignorować", "Rozmawiać i odpoczywać", "Nic nie robić"], correct: 1 },
+  { q: "Sen wpływa na:", a: ["Nic", "Zdrowie psychiczne i fizyczne", "Tylko wzrost"], correct: 1 },
+  { q: "Depresja to:", a: ["Humor", "Choroba", "Lenistwo"], correct: 1 },
+  { q: "Pomoc psychologiczna jest:", a: ["Wstydliwa", "Normalna i ważna", "Zbędna"], correct: 1 },
+  { q: "Nikotyna:", a: ["Jest zdrowa", "Uzależnia", "Dodaje energii"], correct: 1 },
+  { q: "Alkohol:", a: ["Nie szkodzi", "Szkodzi zdrowiu", "Poprawia koncentrację"], correct: 1 },
+  { q: "Uzależnienie to:", a: ["Zwyczaj", "Choroba i przymus", "Hobby"], correct: 1 },
+  { q: "Narkotyki:", a: ["Są bezpieczne", "Są niebezpieczne", "Pomagają w nauce"], correct: 1 },
+  { q: "E-papierosy:", a: ["Są zdrowe", "Też szkodzą", "Nie uzależniają"], correct: 1 },
+  { q: "Jak często myć ręce?", a: ["Rzadko", "Często", "Nigdy"], correct: 1 },
+  { q: "Mycie zębów:", a: ["1 raz dziennie", "2 razy dziennie", "Nie trzeba"], correct: 1 },
+  { q: "Higiena zapobiega:", a: ["Chorobom", "Nauce", "Wzrostowi"], correct: 0 },
+  { q: "Brudne ręce mogą:", a: ["Nic", "Przenosić bakterie", "Leczyć"], correct: 1 },
+  { q: "Prysznic jest:", a: ["Niepotrzebny", "Ważny dla zdrowia", "Szkodliwy"], correct: 1 },
+  { q: "Pas bezpieczeństwa:", a: ["Niepotrzebny", "Chroni życie", "Przeszkadza"], correct: 1 },
+  { q: "Kask na rowerze:", a: ["Wstyd", "Chroni głowę", "Niepotrzebny"], correct: 1 },
+  { q: "Numer alarmowy w UE:", a: ["911", "112", "999"], correct: 1 },
+  { q: "Pierwsza pomoc jest:", a: ["Niepotrzebna", "Bardzo ważna", "Zakazana"], correct: 1 },
+  { q: "Oparzenia należy:", a: ["Ignorować", "Schłodzić wodą", "Smarować czymkolwiek"], correct: 1 },
+  { q: "Siedzący tryb życia jest:", a: ["Zdrowy", "Szkodliwy", "Neutralny"], correct: 1 },
+  { q: "Ekrany przed snem:", a: ["Pomagają spać", "Pogarszają sen", "Bez wpływu"], correct: 1 },
+  { q: "Regularność dnia:", a: ["Pomaga zdrowiu", "Szkodzi", "Bez znaczenia"], correct: 0 },
+  { q: "Relacje z ludźmi są:", a: ["Nieważne", "Ważne dla zdrowia", "Szkodliwe"], correct: 1 },
+  { q: "Odpoczynek jest:", a: ["Stratą czasu", "Potrzebny", "Zbędny"], correct: 1 },
+  { q: "Szczepienia:", a: ["Chronią zdrowie", "Szkodzą", "Są zbędne"], correct: 0 },
+  { q: "Badania kontrolne:", a: ["Niepotrzebne", "Wykrywają choroby", "Szkodzą"], correct: 1 },
+  { q: "Nadwaga może:", a: ["Nic", "Szkodzić zdrowiu", "Pomagać"], correct: 1 },
+  { q: "Słońce bez ochrony jest:", a: ["Bezpieczne", "Szkodliwe", "Leczy wszystko"], correct: 1 },
+  { q: "SPF to:", a: ["Rodzaj jedzenia", "Ochrona przed słońcem", "Lek"], correct: 1 },
+  { q: "Witaminy są:", a: ["Nieważne", "Potrzebne", "Szkodliwe"], correct: 1 },
+  { q: "Sen poniżej 5h jest:", a: ["Zdrowy", "Szkodliwy", "Zalecany"], correct: 1 },
+  { q: "Picie napojów energetycznych:", a: ["Zdrowe", "Niezdrowe w nadmiarze", "Bez wpływu"], correct: 1 },
+  { q: "Zdrowie psychiczne i fizyczne:", a: ["Nie są powiązane", "Są powiązane", "Nie istnieją"], correct: 1 },
+  { q: "Najlepszy sposób dbania o zdrowie:", a: ["Brak ruchu", "Zdrowy styl życia", "Same leki"], correct: 1 }
 ];
 
+const TOTAL_QUESTIONS = 10;
 let questions = [], current = 0, score = 0, playerNick = "";
 
 function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
@@ -271,15 +303,15 @@ window.startGame = () => {
   playerNick = document.getElementById("nickname").value.trim() || "Anonim";
   document.getElementById("login").style.display = "none";
   document.getElementById("game").classList.remove("hidden");
-  questions = shuffle([...allQuestions]).slice(0, 7);
+  questions = shuffle([...allQuestions]).slice(0, TOTAL_QUESTIONS);
   current = 0; score = 0;
   showQuestion();
 };
 
 function showQuestion() {
   const q = questions[current];
-  document.getElementById("progressText").innerText = `Pytanie ${current + 1} z ${questions.length}`;
-  document.getElementById("progressBar").style.width = ((current / questions.length) * 100) + "%";
+  document.getElementById("progressText").innerText = `Pytanie ${current + 1} z ${TOTAL_QUESTIONS}`;
+  document.getElementById("progressBar").style.width = ((current / TOTAL_QUESTIONS) * 100) + "%";
   document.getElementById("question").innerText = q.q;
   document.getElementById("result").innerText = "";
   const labels = ["A", "B", "C"];
@@ -305,13 +337,16 @@ window.checkAnswer = (i) => {
 };
 
 async function endGame() {
+  const pct = Math.round((score / TOTAL_QUESTIONS) * 100);
   document.getElementById("progressText").innerText = "Koniec gry!";
   document.getElementById("progressBar").style.width = "100%";
   document.getElementById("question").innerHTML =
-    `🎉 Świetnie, ${playerNick}!<div class="score-big">${score}/7</div>`;
+    `🎉 Świetnie, ${playerNick}!
+     <div class="score-big">${score}/${TOTAL_QUESTIONS}</div>
+     <div class="score-pct">${pct}% poprawnych odpowiedzi</div>`;
   document.getElementById("answers").innerHTML = `<p style="color:#aaa;font-size:0.85rem">💾 Zapisuję wynik...</p>`;
   document.getElementById("result").innerText = "";
-  await window.saveToFirebase(score, playerNick);
+  await window.saveToFirebase(score, TOTAL_QUESTIONS, playerNick);
   document.getElementById("answers").innerHTML =
     `<p style="color:#00796b;margin-bottom:10px;">✅ Wynik zapisany!</p>
      <button class="btn btn-green" onclick="location.reload()">🔄 Zagraj ponownie</button>`;
