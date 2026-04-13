@@ -133,9 +133,17 @@
 
   <!-- LOGIN -->
   <div id="login">
-    <label>Twoje imię (opcjonalnie):</label>
-    <input id="nickname" type="text" placeholder="np. Kasia, Kl. 2B...">
-    <button class="btn btn-green" onclick="startGame()">▶ Rozpocznij grę</button>
+    <div id="warningBox" class="hidden" style="background:#fff3cd;border-radius:12px;padding:14px;margin-bottom:16px;font-size:0.9rem;color:#856404;">
+      ⚠️ <b>Uwaga!</b> Masz tylko <b>jedno podejście</b> do quizu na tym urządzeniu. Upewnij się, że jesteś gotowy/a przed rozpoczęciem!
+    </div>
+    <div id="blockedBox" class="hidden" style="background:#fdecea;border-radius:12px;padding:16px;font-size:0.95rem;color:#c62828;">
+      🚫 <b>Quiz już wypełniony!</b><br><br>Na tym urządzeniu zostało już ukończone jedno podejście. Dziękujemy za udział!
+    </div>
+    <div id="startBox">
+      <label>Twoje imię (opcjonalnie):</label>
+      <input id="nickname" type="text" placeholder="np. Kasia, Kl. 2B...">
+      <button class="btn btn-green" onclick="startGame()">▶ Rozpocznij grę</button>
+    </div>
     <hr class="divider" style="margin-top:24px;">
     <label>Hasło admina:</label>
     <input id="adminPass" type="password" placeholder="Hasło admina...">
@@ -157,6 +165,7 @@
   <div id="admin" class="hidden">
     <div class="admin-box" id="adminData">Ładowanie...</div>
     <button class="btn btn-yellow" style="margin-top:12px;" onclick="clearResults()">🗑 Wyczyść wyniki</button>
+    <button class="btn btn-gray"   style="margin-top:8px;"  onclick="resetAttempts()">🔓 Odblokuj urządzenia</button>
     <button class="btn btn-gray"   style="margin-top:8px;"  onclick="toggleQR()">📱 Pokaż / ukryj QR kod</button>
     <div id="qrSection" class="hidden qr-box">
       <b>Zeskanuj by zagrać:</b>
@@ -240,6 +249,9 @@ window.toggleQR = () => {
     document.getElementById("qrcode").innerHTML =
       `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}" width="200" height="200" alt="QR">`;
   }
+window.resetAttempts = () => {
+  localStorage.removeItem("quizDone");
+  alert("✅ Urządzenie odblokowane – można zagrać ponownie.");
 };
 </script>
 
