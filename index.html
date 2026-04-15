@@ -131,216 +131,37 @@
   <h1>🌿 Oddychaj, Ruszaj, Myśl</h1>
   <h3>Twoje Zdrowie to Kod Dnia!</h3>
 
-  <!-- LOGIN -->
   <div id="login">
     <label>Twoje imię (opcjonalnie):</label>
-    <input id="nickname" type="text" placeholder="np. Kasia, Kl. 2B..." oninput="document.getElementById('nickError').classList.add('hidden');this.style.borderColor=''">
-    <div id="nickError" class="hidden" style="background:#fdecea;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:0.85rem;color:#c62828;">
-      ⚠️ Podana nazwa zawiera nieodpowiednie słowa. Wpisz inne imię.
-    </div>
+    <input id="nickname" type="text">
     <button class="btn btn-green" onclick="startGame()">▶ Rozpocznij grę</button>
     <hr class="divider" style="margin-top:24px;">
     <label>Hasło admina:</label>
-    <input id="adminPass" type="password" placeholder="Hasło admina...">
+    <input id="adminPass" type="password">
     <button class="btn btn-yellow" onclick="showAdmin()">🔒 Panel nauczyciela</button>
   </div>
 
-  <!-- GRA -->
   <div id="game" class="hidden">
-    <div class="progress" id="progressText"></div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
-    </div>
-    <p id="question"></p>
+    <div id="question"></div>
     <div id="answers"></div>
     <p id="result"></p>
   </div>
 
-  <!-- ADMIN -->
   <div id="admin" class="hidden">
-    <div class="admin-box" id="adminData">Ładowanie...</div>
-    <button class="btn btn-yellow" style="margin-top:12px;" onclick="clearResults()">🗑 Wyczyść wyniki</button>
-    <button class="btn btn-gray"   style="margin-top:8px;"  onclick="toggleQR()">📱 Pokaż / ukryj QR kod</button>
-    <div id="qrSection" class="hidden qr-box">
-      <b>Zeskanuj by zagrać:</b>
-      <div id="qrcode"></div>
-      <p id="qrLink"></p>
-    </div>
+    <div id="adminData">Ładowanie...</div>
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy }
-  from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBrY5eRtLvNH43tmcb_3s3APul-uQzH8ok",
-  authDomain: "edu-zdrowotna.firebaseapp.com",
-  projectId: "edu-zdrowotna",
-  storageBucket: "edu-zdrowotna.firebasestorage.app",
-  messagingSenderId: "434567782145",
-  appId: "1:434567782145:web:0311d68279361687324500"
-};
-
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-const ADMIN_PASSWORD = "admin123";
-
-window.saveToFirebase = async (score, total, nick) => {
-  await addDoc(collection(db, "wyniki"), {
-    wynik: score,
-    total: total,
-    pct: Math.round((score / total) * 100),
-    nick: nick || "Anonim",
-    data: new Date().toLocaleString("pl-PL"),
-    ts: Date.now()
-  });
-};
-
-window.showAdmin = async () => {
-  if (document.getElementById("adminPass").value !== ADMIN_PASSWORD) {
-    alert("Błędne hasło admina!"); return;
-  }
-  document.getElementById("admin").classList.remove("hidden");
-  document.getElementById("adminData").innerHTML = "⏳ Ładowanie...";
-  try {
-    const q = query(collection(db, "wyniki"), orderBy("ts", "desc"));
-    const snap = await getDocs(q);
-    const results = [];
-    snap.forEach(d => results.push(d.data()));
-    if (!results.length) {
-      document.getElementById("adminData").innerHTML = "<i>Brak wyników</i>"; return;
-    }
-    const avgPct = Math.round(results.reduce((a,b) => a + b.pct, 0) / results.length);
-    const avgPts = (results.reduce((a,b) => a + b.wynik, 0) / results.length).toFixed(1);
-    const bestPct = Math.max(...results.map(r => r.pct));
-    let html = `<span class="stat">👥 ${results.length} graczy</span><hr class="divider">
-<span class="stat">⭐ Średnia: ${avgPts} pkt / ${avgPct}%</span><br>
-<span class="stat">🏆 Najlepszy: ${bestPct}%</span><hr class="divider">`;
-    results.forEach((r, i) => {
-      html += `<b>#${i+1} ${r.nick}</b> – ${r.wynik}/${r.total} <span style="color:#00796b;font-weight:bold">(${r.pct}%)</span> <small style="color:#bbb">${r.data}</small><br>`;
-    });
-    document.getElementById("adminData").innerHTML = html;
-  } catch(e) {
-    document.getElementById("adminData").innerHTML = "❌ Błąd połączenia z bazą.";
-  }
-};
-
-window.clearResults = async () => {
-  if (!confirm("Na pewno wyczyścić WSZYSTKIE wyniki?")) return;
-  const snap = await getDocs(collection(db, "wyniki"));
-  await Promise.all(snap.docs.map(d => deleteDoc(doc(db, "wyniki", d.id))));
-  document.getElementById("adminData").innerHTML = "<i>Wyniki wyczyszczone ✅</i>";
-};
-
-window.toggleQR = () => {
-  const sec = document.getElementById("qrSection");
-  sec.classList.toggle("hidden");
-  if (!sec.classList.contains("hidden") && !document.getElementById("qrcode").innerHTML) {
-    const url = window.location.href;
-    document.getElementById("qrLink").innerText = url;
-    document.getElementById("qrcode").innerHTML =
-      `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}" width="200" height="200" alt="QR">`;
-  }
-};
-</script>
-
 <script>
-// Pytania: correct = tekst poprawnej odpowiedzi, wrong = dwie wiarygodne błędne
-const allQuestions = [
-  { q: "Co to jest zdrowie wg WHO?", correct: "Stan pełnego dobrostanu fizycznego, psychicznego i społecznego", wrong: ["Brak jakichkolwiek objawów choroby", "Prawidłowe wyniki wszystkich badań"] },
-  { q: "Co wpływa na zdrowie najbardziej?", correct: "Styl życia", wrong: ["Dostęp do lekarzy", "Geny i dziedziczność"] },
-  { q: "Ile godzin snu potrzebuje nastolatek?", correct: "7–9 godzin", wrong: ["5–6 godzin", "10–12 godzin"] },
-  { q: "Co to jest profilaktyka zdrowotna?", correct: "Działania zapobiegające chorobom", wrong: ["Leczenie chorób we wczesnym stadium", "Rehabilitacja po chorobie"] },
-  { q: "Który czynnik NIE wpływa na zdrowie?", correct: "Kolor oczu", wrong: ["Poziom stresu", "Jakość powietrza w okolicy"] },
-  { q: "Ile posiłków dziennie zaleca się jeść?", correct: "4–5 regularnych posiłków", wrong: ["2 duże posiłki dziennie", "6–7 małych przekąsek"] },
-  { q: "Co jest głównym źródłem energii dla mózgu?", correct: "Węglowodany (glukoza)", wrong: ["Tłuszcze zwierzęce", "Białko z mięsa"] },
-  { q: "Które produkty zawierają najwięcej witamin?", correct: "Warzywa i owoce", wrong: ["Produkty mleczne i jaja", "Mięso i ryby"] },
-  { q: "Co najbardziej należy ograniczać w diecie nastolatka?", correct: "Cukier i słodzone napoje", wrong: ["Produkty zbożowe", "Nabiał i sery"] },
-  { q: "Ile wody dziennie powinien pić nastolatek?", correct: "ok. 1,5–2 litry", wrong: ["ok. 3–4 litry", "ok. 0,5–1 litr"] },
-  { q: "Ile aktywności fizycznej dziennie zaleca WHO dla młodzieży?", correct: "Co najmniej 60 minut", wrong: ["Co najmniej 30 minut", "Co najmniej 90 minut"] },
-  { q: "Jakie korzyści daje regularna aktywność fizyczna?", correct: "Poprawia kondycję, nastrój i odporność", wrong: ["Przyspiesza wzrost kości o 20%", "Eliminuje potrzebę snu regeneracyjnego"] },
-  { q: "Która aktywność najskuteczniej poprawia kondycję układu krążenia?", correct: "Bieganie lub szybki marsz", wrong: ["Rozciąganie i joga", "Ćwiczenia siłowe z ciężarami"] },
-  { q: "Co grozi przy długotrwałym braku ruchu?", correct: "Otyłość i choroby sercowo-naczyniowe", wrong: ["Nadmierne wzmocnienie kości", "Przyspieszony metabolizm"] },
-  { q: "Po co wykonuje się rozgrzewkę przed ćwiczeniami?", correct: "Przygotowuje mięśnie i zmniejsza ryzyko kontuzji", wrong: ["Zwiększa masę mięśniową szybciej", "Zastępuje właściwy trening w krótkim czasie"] },
-  { q: "Czym jest stres z punktu widzenia biologii?", correct: "Naturalną reakcją organizmu na wyzwania", wrong: ["Zaburzeniem psychicznym wymagającym leczenia", "Objawem niedoboru witamin z grupy B"] },
-  { q: "Co jest skuteczną metodą radzenia sobie ze stresem?", correct: "Aktywność fizyczna i rozmowa z bliskimi", wrong: ["Izolowanie się i unikanie problemu", "Spożywanie dużych ilości węglowodanów"] },
-  { q: "Na co wpływa jakość snu?", correct: "Na koncentrację, nastrój i odporność", wrong: ["Wyłącznie na tempo wzrostu w młodości", "Tylko na wygląd skóry i włosów"] },
-  { q: "Czym jest depresja?", correct: "Poważną chorobą wymagającą leczenia", wrong: ["Przedłużonym smutkiem po trudnych wydarzeniach", "Skutkiem zbyt małej ilości słońca"] },
-  { q: "Kiedy warto skorzystać z pomocy psychologa?", correct: "Gdy problemy emocjonalne utrudniają codzienne życie", wrong: ["Tylko po poważnej traumie lub wypadku", "Wyłącznie gdy lekarz pierwszego kontaktu skieruje"] },
-  { q: "Jak nikotyna działa na organizm?", correct: "Uzależnia i niszczy układ oddechowy oraz krążenia", wrong: ["Krótkotrwale poprawia koncentrację bez skutków ubocznych", "Działa podobnie do kofeiny i jest równie bezpieczna"] },
-  { q: "Co alkohol robi z organizmem nastolatka?", correct: "Uszkadza rozwijający się mózg i wątrobę", wrong: ["Działa łagodnie w małych dawkach, bez ryzyka", "Szkodzi tylko przy regularnym spożywaniu"] },
-  { q: "Co charakteryzuje uzależnienie?", correct: "Przymus używania substancji mimo szkód zdrowotnych", wrong: ["Regularne sięganie po substancję z wyboru", "Silne upodobanie do danej czynności lub smaku"] },
-  { q: "Dlaczego narkotyki są niebezpieczne?", correct: "Niszczą mózg, uzależniają i mogą prowadzić do śmierci", wrong: ["Są niebezpieczne tylko przy przedawkowaniu", "Szkodzą głównie przy długotrwałym stosowaniu"] },
-  { q: "Czy e-papierosy są bezpieczną alternatywą dla papierosów?", correct: "Nie, również szkodzą i uzależniają", wrong: ["Tak, bo nie zawierają smoły", "Są bezpieczne dla osób poniżej 18 roku życia"] },
-  { q: "Kiedy szczególnie ważne jest mycie rąk?", correct: "Przed jedzeniem i po korzystaniu z toalety", wrong: ["Tylko po kontakcie z chorą osobą", "Wyłącznie gdy ręce są widocznie brudne"] },
-  { q: "Ile razy dziennie należy myć zęby?", correct: "2 razy – rano i wieczorem", wrong: ["3 razy – po każdym posiłku", "Raz dziennie – wystarczy wieczorem"] },
-  { q: "Przed czym chroni regularna higiena osobista?", correct: "Przed infekcjami bakteryjnymi i wirusowymi", wrong: ["Przed chorobami genetycznymi", "Przed alergiami pokarmowymi"] },
-  { q: "Co może spowodować jedzenie brudnymi rękami?", correct: "Zatrucie pokarmowe lub infekcję żołądkową", wrong: ["Niegroźne podrażnienie żołądka", "Jedynie nieprzyjemny smak jedzenia"] },
-  { q: "Dlaczego codzienna higiena ciała jest ważna?", correct: "Zapobiega namnażaniu bakterii i grzybów na skórze", wrong: ["Jest wyłącznie kwestią estetyczną", "Chroni wyłącznie inne osoby w otoczeniu"] },
-  { q: "Dlaczego należy zapinać pas bezpieczeństwa?", correct: "Chroni przed śmiertelnym urazem podczas wypadku", wrong: ["Wymaga tego prawo, ale realnie nie chroni", "Chroni tylko przy prędkości powyżej 100 km/h"] },
-  { q: "Co chroni kask rowerowy?", correct: "Głowę przed urazem przy upadku", wrong: ["Głowę, ale tylko przy upadku z dużej prędkości", "Głównie twarz i szczękę rowerzysty"] },
-  { q: "Jaki numer alarmowy działa w całej Unii Europejskiej?", correct: "112", wrong: ["999", "911"] },
-  { q: "Dlaczego warto znać pierwszą pomoc?", correct: "Można uratować życie zanim przyjedzie pogotowie", wrong: ["Wymaga tego prawo przy posiadaniu prawa jazdy", "Przyda się tylko ratownikom i lekarzom"] },
-  { q: "Jak prawidłowo postępować z oparzeniem?", correct: "Chłodzić bieżącą wodą przez ok. 10–15 minut", wrong: ["Natychmiast posmarować masłem lub kremem", "Przykryć szczelnie bandażem i nie dotykać"] },
-  { q: "Co powoduje długotrwałe siedzenie bez ruchu?", correct: "Bóle kręgosłupa, otyłość i problemy krążeniowe", wrong: ["Wzmocnienie mięśni posturalnych pleców", "Lepszą koncentrację i efektywność pracy"] },
-  { q: "Jak ekrany (telefon, TV) przed snem wpływają na sen?", correct: "Niebieskie światło zaburza produkcję melatoniny", wrong: ["Relaksują i ułatwiają zasypianie", "Nie mają udowodnionego wpływu na sen"] },
-  { q: "Co daje organizmowi regularne pory snu i posiłków?", correct: "Stabilizuje rytm dobowy i poprawia samopoczucie", wrong: ["Spowalnia metabolizm w dłuższej perspektywie", "Ma znaczenie tylko dla małych dzieci"] },
-  { q: "Dlaczego relacje z innymi ludźmi są ważne dla zdrowia?", correct: "Zmniejszają stres i ryzyko depresji", wrong: ["Są ważne społecznie, ale nie zdrowotnie", "Mają znaczenie tylko w podeszłym wieku"] },
-  { q: "Czym jest aktywny odpoczynek?", correct: "Formą relaksu przywracającą energię i równowagę", wrong: ["Ćwiczeniami o niskiej intensywności zastępującymi sen", "Odpoczynkiem zalecanym wyłącznie po chorobie"] },
-  { q: "Co dają szczepienia ochronne?", correct: "Odporność na konkretne choroby zakaźne", wrong: ["Ogólne wzmocnienie układu odpornościowego", "Ochronę przed wszystkimi infekcjami wirusowymi"] },
-  { q: "Po co wykonuje się regularne badania kontrolne?", correct: "By wykryć choroby zanim pojawią się objawy", wrong: ["Są obowiązkowe tylko dla osób powyżej 40 roku życia", "Są potrzebne wyłącznie gdy czujemy się źle"] },
-  { q: "Jakie choroby może powodować nadwaga?", correct: "Cukrzycę, nadciśnienie i choroby serca", wrong: ["Głównie problemy z kręgosłupem i stawami", "Niedobory witamin i minerałów"] },
-  { q: "Dlaczego ekspozycja na słońce bez ochrony jest szkodliwa?", correct: "Promieniowanie UV uszkadza DNA i może powodować raka skóry", wrong: ["Szkodzi tylko przy bardzo jasnej karnacji", "Jest niebezpieczne wyłącznie latem między 12 a 14"] },
-  { q: "Do czego służy krem z filtrem SPF?", correct: "Chroni skórę przed szkodliwym promieniowaniem UV", wrong: ["Nawilża skórę i spowalnia jej starzenie", "Leczy oparzenia słoneczne po ekspozycji"] },
-  { q: "Dlaczego witaminy są niezbędne dla organizmu?", correct: "Regulują procesy życiowe i wspierają odporność", wrong: ["Dostarczają energii podobnie jak węglowodany", "Są potrzebne wyłącznie dzieciom w fazie wzrostu"] },
-  { q: "Co się dzieje z organizmem przy chronicznym niedoborze snu?", correct: "Spada odporność, koncentracja i rośnie ryzyko chorób", wrong: ["Organizm przyzwyczaja się i działa normalnie", "Jedynym efektem jest większe zmęczenie w ciągu dnia"] },
-  { q: "Dlaczego napoje energetyczne są niezdrowe dla nastolatków?", correct: "Zawierają duże dawki kofeiny i cukru szkodliwe dla serca", wrong: ["Są niezdrowe tylko przy spożyciu więcej niż 2 dziennie", "Szkodzą wyłącznie osobom z nadciśnieniem"] },
-  { q: "Jak zdrowie psychiczne i fizyczne są ze sobą powiązane?", correct: "Problemy psychiczne mogą wywoływać objawy fizyczne i odwrotnie", wrong: ["Są niezależne – choroba jednego nie wpływa na drugie", "Powiązane są tylko u osób starszych lub przewlekle chorych"] },
-  { q: "Co najskuteczniej wspiera długoterminowe zdrowie?", correct: "Zdrowy styl życia: ruch, dieta, sen i relacje", wrong: ["Regularne przyjmowanie suplementów diety", "Unikanie wszelkich sytuacji stresowych"] }
-];
+const ADMIN_PASSWORD = "admin123"; // ✅ ZMIENIONE HASŁO
 
-const TOTAL_QUESTIONS = 10;
-let questions = [], current = 0, score = 0, playerNick = "";
-let currentAnswers = [];
-
-function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
-
-const BANNED = [
-  // polskie
-  "chuj","chuja","chujem","kurwa","kurwy","kurwę","pizda","pizdy","pizdę","pizdą",
-  "jebać","jebany","jebana","jebane","jebal","jebał","jebię","zajebany","zajebana",
-  "skurwysyn","skurwiel","skurwiał","morda","mordę","mordą","dupa","dupy","dupę",
-  "dupą","dupek","dupka","cipka","cipę","cipą","cipa","penis","penisa","kutaś",
-  "kutas","kutasa","kutasem","pierdolić","pierdol","pierdole","pierdolę","pierdolony",
-  "pierdolona","pierdolone","wkurwiony","wkurwić","wkurwia","spierdalaj","spierdolić",
-  "opierdolić","odpierdolić","zapierdolić","ujebać","skurwić","kurwić","kurwi",
-  "huj","huja","hujem","gówno","gówna","gównem","gówniarz","suka","sukę","suką",
-  "suki","bitch","szmata","szmaty","szmatę","szmatą","dziwka","dziwki","dziwkę",
-  "dziwką","prostytutka","fuck","shit","ass","asshole","bitch","cunt","dick",
-  "cock","pussy","bastard","motherfucker","nigger","fag","faggot","retard",
-  "idiota","idioci","głupek","głupku","debil","debila","debilowi","kretyno","kretyn",
-  "pedał","pedała","pedałowi","pedale","homoseksuali","pedofil","nazista","nazistów"
-];
-
-function containsBannedWord(text) {
-  const lower = text.toLowerCase().replace(/[^a-ząćęłńóśźż]/g, " ");
-  return BANNED.some(word => {
-    const re = new RegExp(`(^|\\s)${word}(\\s|$)`);
-    return re.test(lower) || lower.includes(word);
-  });
-}
-
-window.startGame = () => {
-  const raw = document.getElementById("nickname").value.trim();
-  const errEl = document.getElementById("nickError");
-
-  if (raw && containsBannedWord(raw)) {
-    errEl.classList.remove("hidden");
-    document.getElementById("nickname").style.borderColor = "#e53935";
+window.showAdmin = () => {
+  if (document.getElementById("adminPass").value !== ADMIN_PASSWORD) {
+    alert("Błędne hasło admina!");
     return;
   }
-
-  errEl.classList.add("hidden");
-  document.getElementById("nickname").style.bord
+  document.getElementById("admin").classList.remove("hidden");
+};
+</script>
+</body>
+</html>
